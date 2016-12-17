@@ -19,6 +19,7 @@ import edu.upc.eetac.dsa.pokeetacgo.serviceLibrary.PokEETACRestClient;
 
 public class LoginActivity extends AppCompatActivity {
     private static final String TAG="LOGIN";
+    PokEETACGo pokEETACGo;
     TextView username;
     TextView password;
     Button registerButton;
@@ -27,6 +28,7 @@ public class LoginActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
+        pokEETACGo = PokEETACGo.getInstance();
 
         username = (TextView) findViewById(R.id.username);
         password = (TextView) findViewById(R.id.password);
@@ -59,6 +61,7 @@ public class LoginActivity extends AppCompatActivity {
                 AuthenticationResult authenticationResult = new Gson().fromJson(responseString, AuthenticationResult.class);
                 Log.i(TAG, "Login is successful: " + authenticationResult.isSuccessful);
                 if (authenticationResult.isSuccessful) {
+                    pokEETACGo.setCurrentUserId(authenticationResult.userId);
                     Toast.makeText(getApplicationContext(), "Welcome " + user.getUsername() + "!", Toast.LENGTH_LONG).show();
                 } else {
                     Toast.makeText(getApplicationContext(), "Username or password incorrect. Please try again!", Toast.LENGTH_LONG).show();

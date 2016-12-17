@@ -4,9 +4,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.gson.Gson;
@@ -18,6 +16,7 @@ import edu.upc.eetac.dsa.pokeetacgo.entity.serviceLibraryResults.AuthenticationR
 import edu.upc.eetac.dsa.pokeetacgo.serviceLibrary.PokEETACRestClient;
 
 public class RegisterActivity extends AppCompatActivity {
+    PokEETACGo pokEETACGo;
     private static final String TAG = "REGISTER";
     EditText username;
     EditText password;
@@ -27,6 +26,7 @@ public class RegisterActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register);
+        pokEETACGo = PokEETACGo.getInstance();
 
         username = (EditText) findViewById(R.id.username);
         password = (EditText) findViewById(R.id.password);
@@ -55,6 +55,7 @@ public class RegisterActivity extends AppCompatActivity {
                     AuthenticationResult authenticationResult = new Gson().fromJson(responseString, AuthenticationResult.class);
                     Log.i(TAG, "Register is successful: " + authenticationResult.isSuccessful);
                     if (authenticationResult.isSuccessful) {
+                        pokEETACGo.setCurrentUserId(authenticationResult.userId);
                         Toast.makeText(getApplicationContext(), "Welcome " + user.getUsername() + "!", Toast.LENGTH_LONG).show();
                     } else {
                         Toast.makeText(getApplicationContext(), "Username or email already exists. Please try again!", Toast.LENGTH_LONG).show();
