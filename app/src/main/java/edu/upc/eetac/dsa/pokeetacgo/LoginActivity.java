@@ -63,6 +63,10 @@ public class LoginActivity extends AppCompatActivity {
                 if (authenticationResult.isSuccessful) {
                     pokEETACGo.setCurrentUserId(authenticationResult.userId);
                     Toast.makeText(getApplicationContext(), "Welcome " + user.getUsername() + "!", Toast.LENGTH_LONG).show();
+                    Intent goToMaps = new Intent(getApplicationContext(), MapsActivity.class);
+                    goToMaps.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                    startActivity(goToMaps);
+                    finish();
                 } else {
                     Toast.makeText(getApplicationContext(), "Username or password incorrect. Please try again!", Toast.LENGTH_LONG).show();
                 }

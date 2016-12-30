@@ -1,15 +1,16 @@
 package edu.upc.eetac.dsa.pokeetacgo;
 
-import android.app.Application;
-import android.content.Context;
+import android.util.SparseArray;
+
+import edu.upc.eetac.dsa.pokeetacgo.entity.LocationMarker;
 
 /**
  * Created by ericmassip on 17/12/16.
  */
 public class PokEETACGo {
     private static PokEETACGo instance = null;
-
     private int currentUserId;
+    public SparseArray<LocationMarker> profemonLocationMarkers = new SparseArray<>();
 
     private PokEETACGo() {}
 

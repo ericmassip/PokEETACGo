@@ -5,4 +5,10 @@
     <string name="login">Login</string>
     <string name="register">Register</string>
     <string name="email">Email</string>
+    <string name="title_activity_maps">Map</string>
+    <string name="title_location_permission">Title Location Permission</string>
+    <string name="text_location_permission">Text Location Permission</string>
+    <string name="ok">OK</string>
+    <string name="title_activity_profemon_appeared">ProfemonAppearedActivity</string>
+    <string name="capture_me_button">Capture me!</string>
 </resources>

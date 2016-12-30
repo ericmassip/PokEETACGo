@@ -1,5 +1,6 @@
 package edu.upc.eetac.dsa.pokeetacgo;
 
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -16,8 +17,9 @@ import edu.upc.eetac.dsa.pokeetacgo.entity.serviceLibraryResults.AuthenticationR
 import edu.upc.eetac.dsa.pokeetacgo.serviceLibrary.PokEETACRestClient;
 
 public class RegisterActivity extends AppCompatActivity {
-    PokEETACGo pokEETACGo;
     private static final String TAG = "REGISTER";
+    PokEETACGo pokEETACGo;
+    PokEETACGoBusiness pokEETACGoBusiness;
     EditText username;
     EditText password;
     EditText email;
@@ -27,6 +29,7 @@ public class RegisterActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register);
         pokEETACGo = PokEETACGo.getInstance();
+        pokEETACGoBusiness = new PokEETACGoBusiness();
 
         username = (EditText) findViewById(R.id.username);
         password = (EditText) findViewById(R.id.password);
@@ -39,7 +42,7 @@ public class RegisterActivity extends AppCompatActivity {
         user.setPassword(password.getText().toString());
         user.setEmail(email.getText().toString());
 
-        if (isEmpty(username) || isEmpty(password) || isEmpty(email)) {
+        if (pokEETACGoBusiness.isEmpty(username) || pokEETACGoBusiness.isEmpty(password) || pokEETACGoBusiness.isEmpty(email)) {
             Toast.makeText(getApplicationContext(), "Fill in all the fields, please.", Toast.LENGTH_SHORT).show();
         } else {
             PokEETACRestClient.post(this, "/user/register", PokEETACRestClient.getObjectAsStringEntity(user), "application/json", new TextHttpResponseHandler() {
@@ -57,15 +60,15 @@ public class RegisterActivity extends AppCompatActivity {
                     if (authenticationResult.isSuccessful) {
                         pokEETACGo.setCurrentUserId(authenticationResult.userId);
                         Toast.makeText(getApplicationContext(), "Welcome " + user.getUsername() + "!", Toast.LENGTH_LONG).show();
+                        Intent goToMaps = new Intent(getApplicationContext(), MapsActivity.class);
+                        goToMaps.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                        startActivity(goToMaps);
+                        finish();
                     } else {
                         Toast.makeText(getApplicationContext(), "Username or email already exists. Please try again!", Toast.LENGTH_LONG).show();
                     }
                 }
             });
         }
-    }
-
-    private boolean isEmpty(EditText editText) {
-        return editText.getText().toString().isEmpty();
     }
 }
