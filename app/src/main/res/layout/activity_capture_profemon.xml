@@ -10,30 +10,4 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="edu.upc.eetac.dsa.pokeetacgo.CaptureProfemonActivity">
 
-    <Button
-        android:text="Go Back To Maps"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerVertical="true"
-        android:layout_centerHorizontal="true"
-        android:id="@+id/backToMapsButton"
-        android:onClick="goBackToMaps" />
-
-    <TextView
-        android:text="Random Number"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/randomNumber"
-        android:layout_marginBottom="30dp"
-        android:layout_above="@+id/backToMapsButton"
-        android:layout_centerHorizontal="true" />
-
-    <TextView
-        android:text="Si random es mayor de 60, capturado será true, si no false"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignBottom="@+id/randomNumber"
-        android:layout_centerHorizontal="true"
-        android:layout_marginBottom="52dp"
-        android:id="@+id/textView" />
 </RelativeLayout>

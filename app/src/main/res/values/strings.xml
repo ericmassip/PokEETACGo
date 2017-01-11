@@ -11,4 +11,7 @@
     <string name="ok">OK</string>
     <string name="title_activity_profemon_appeared">ProfemonAppearedActivity</string>
     <string name="capture_me_button">Capture me!</string>
+    <string name="level">Level</string>
+    <string name="zero_floor">0 floor</string>
+    <string name="user">User</string>
 </resources>

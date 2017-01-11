@@ -2,17 +2,14 @@ package edu.upc.eetac.dsa.pokeetacgo.entity;
 
 import java.util.Calendar;
 
-/**
- * Created by ericmassip on 30/11/16.
- */
 public class Capturado {
     private int id;
     private int idUser;
-//    private User user;
+    private User user;
     private int idProfemon;
-//    private Profemon profemon;
+    private Profemon profemon;
     private int idLocation;
-//    private Location location;
+    private Location location;
     private Calendar date;
     private int level;
     private boolean isSuccessful;
@@ -33,13 +30,13 @@ public class Capturado {
         this.idUser = idUser;
     }
 
-//    public User getUser() {
-//        return user;
-//    }
+    public User getUser() {
+        return user;
+    }
 
-//    public void setUser(User user) {
-//        this.user = user;
-//    }
+    public void setUser(User user) {
+        this.user = user;
+    }
 
     public int getIdProfemon() {
         return idProfemon;
@@ -49,13 +46,13 @@ public class Capturado {
         this.idProfemon = idProfemon;
     }
 
-//    public Profemon getProfemon() {
-//        return profemon;
-//    }
+    public Profemon getProfemon() {
+        return profemon;
+    }
 
-//    public void setProfemon(Profemon profemon) {
-//        this.profemon = profemon;
-//    }
+    public void setProfemon(Profemon profemon) {
+        this.profemon = profemon;
+    }
 
     public int getIdLocation() {
         return idLocation;
@@ -65,13 +62,13 @@ public class Capturado {
         this.idLocation = idLocation;
     }
 
-//    public Location getLocation() {
-//        return location;
-//    }
+    public Location getLocation() {
+        return location;
+    }
 
-//    public void setLocation(Location location) {
-//        this.location = location;
-//    }
+    public void setLocation(Location location) {
+        this.location = location;
+    }
 
     public Calendar getDate() {
         return date;

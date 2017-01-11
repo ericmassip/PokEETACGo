@@ -12,6 +12,7 @@ import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
+import android.widget.TextView;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -35,12 +36,16 @@ import com.google.gson.reflect.TypeToken;
 import com.loopj.android.http.TextHttpResponseHandler;
 
 import java.lang.reflect.Type;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
 
 import cz.msebera.android.httpclient.Header;
+import edu.upc.eetac.dsa.pokeetacgo.entity.Capturado;
 import edu.upc.eetac.dsa.pokeetacgo.entity.LocationMarker;
+import edu.upc.eetac.dsa.pokeetacgo.entity.User;
 import edu.upc.eetac.dsa.pokeetacgo.entity.serviceLibraryResults.ProfemonLocationResult;
+import edu.upc.eetac.dsa.pokeetacgo.entity.serviceLibraryResults.UserLevelResult;
 import edu.upc.eetac.dsa.pokeetacgo.serviceLibrary.PokEETACRestClient;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener, ResultCallback<Status> {
@@ -53,6 +58,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     List<Geofence> mGeofenceList;
     PendingIntent mGeofencePendingIntent;
     public static final int MY_PERMISSIONS_REQUEST_LOCATION = 99;
+    TextView floor;
+    TextView level;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,6 +76,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         pokEETACGoBusiness.init(getApplicationContext());
         createLocationRequest();
         mGeofenceList = new ArrayList<>();
+        floor = (TextView) findViewById(R.id.floor);
+        level = (TextView) findViewById(R.id.level);
+        setUsernameAndFloor();
     }
 
     protected void onStart() {
@@ -98,7 +108,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void onConnected(Bundle connectionHint) {
         setMyLocationEnabled();
         startLocationUpdates();
-        if(pokEETACGo.profemonLocationMarkers.size() == 0) {
+        if (pokEETACGo.profemonLocationMarkers.size() == 0) {
             setProfemonMarkerIconsOnMap();
         }
     }
@@ -128,6 +138,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
+        mMap.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
     }
 
     private void setMyLocationEnabled() {
@@ -135,7 +146,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             mMap.setMyLocationEnabled(true);
             mMap.getUiSettings().setMyLocationButtonEnabled(true);
             if (getMyLatLng() != null) {
-                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(getMyLatLng(), 17f));
+                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(getMyLatLng(), 19f));
             }
             Log.i(TAG, "My Location enabled");
         }
@@ -178,7 +189,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         mMap.setMyLocationEnabled(true);
                         mMap.getUiSettings().setMyLocationButtonEnabled(true);
                         if (getMyLatLng() != null) {
-                            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(getMyLatLng(), 17f));
+                            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(getMyLatLng(), 19f));
                         }
                         Log.i(TAG, "My Location enabled");
                     }
@@ -211,7 +222,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void onSuccess(int statusCode, Header[] headers, String responseString) {
                 Log.i(TAG, "Success getting random profemon locations: " + responseString);
-                Type listType = new TypeToken<ArrayList<ProfemonLocationResult>>() {}.getType();
+                Type listType = new TypeToken<ArrayList<ProfemonLocationResult>>() {
+                }.getType();
                 List<ProfemonLocationResult> profemons = new Gson().fromJson(responseString, listType);
                 for (ProfemonLocationResult profemonLocation : profemons) {
                     Marker markerAdded = addMarkerOnMap(profemonLocation);
@@ -242,14 +254,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     private void addGeofences() {
-        if(checkLocationPermission()) {
+        if (checkLocationPermission()) {
             try {
                 LocationServices.GeofencingApi.addGeofences(
                         mGoogleApiClient,
                         getGeofencingRequest(),
                         getGeofencePendingIntent()
                 );
-            } catch(IllegalStateException e) {
+            } catch (IllegalStateException e) {
                 Log.e(TAG, "GoogleApiClient not connected yet");
                 mGoogleApiClient.connect();
                 addGeofences();
@@ -273,17 +285,80 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         return mGeofencePendingIntent;
     }
 
+    private void setUsernameAndFloor() {
+        final TextView username = (TextView) findViewById(R.id.username);
+
+        PokEETACRestClient.get("/user/" + pokEETACGo.getCurrentUserId(), null, new TextHttpResponseHandler() {
+            @Override
+            public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
+                Log.e(TAG, "Error getting user from API!");
+            }
+
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, String responseString) {
+                Log.i(TAG, "Success getting user from API: " + responseString);
+                User user = new Gson().fromJson(responseString, User.class);
+                username.setText(user.getUsername());
+                setUserLevel();
+            }
+        });
+    }
+
+    private void setUserLevel() {
+        PokEETACRestClient.get("/user/level/" + pokEETACGo.getCurrentUserId(), null, new TextHttpResponseHandler() {
+            @Override
+            public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
+                Log.e(TAG, "Error getting user's level!");
+            }
+
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, String responseString) {
+                Log.i(TAG, "Success getting user's level: " + responseString);
+                UserLevelResult userLevelResult = new Gson().fromJson(responseString, UserLevelResult.class);
+                level.setText(MessageFormat.format("Level {0}", userLevelResult.userLevel));
+            }
+        });
+    }
+
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         Bundle intentData = intent.getExtras();
+
         boolean capturadoIsSuccessful = intentData.getBoolean("capturadoIsSuccessful");
         int requestIdOfGeofenceTriggered = intentData.getInt("requestIdOfGeofenceTriggered");
+        ProfemonLocationResult profemonLocationResultJustCapturado = pokEETACGo.profemonLocationMarkers.get(requestIdOfGeofenceTriggered).getProfemonLocationResult();
+        postCapturado(profemonLocationResultJustCapturado, capturadoIsSuccessful);
+
         if (checkLocationPermission()) {
             pokEETACGo.profemonLocationMarkers.get(requestIdOfGeofenceTriggered).getMarker().remove();
             pokEETACGo.profemonLocationMarkers.delete(requestIdOfGeofenceTriggered);
             Log.i(TAG, "Geofence and Marker of location " + requestIdOfGeofenceTriggered + " deleted");
         }
+
+        if(capturadoIsSuccessful) {
+            setUserLevel();
+        }
+    }
+
+    private void postCapturado(ProfemonLocationResult profemonLocationResult, boolean capturadoIsSuccessful) {
+        Capturado capturado = new Capturado();
+        capturado.setIdProfemon(profemonLocationResult.profemonId);
+        capturado.setIdLocation(profemonLocationResult.locationId);
+        capturado.setIdUser(pokEETACGo.getCurrentUserId());
+        capturado.setIsSuccessful(capturadoIsSuccessful);
+
+        PokEETACRestClient.post(this, "/capturado", PokEETACRestClient.getObjectAsStringEntity(capturado), "application/json", new TextHttpResponseHandler() {
+            @Override
+            public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
+                Log.e(TAG, "Error posting a new capturado");
+            }
+
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, String responseString) {
+                Log.i(TAG, "Capturado added successfully");
+            }
+        });
     }
 
     @Override
