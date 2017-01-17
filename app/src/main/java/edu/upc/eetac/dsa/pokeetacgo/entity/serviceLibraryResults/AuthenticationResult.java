@@ -6,4 +6,5 @@ package edu.upc.eetac.dsa.pokeetacgo.entity.serviceLibraryResults;
 public class AuthenticationResult {
     public boolean isSuccessful;
     public int userId;
+    public boolean isAdmin;
 }

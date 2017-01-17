@@ -51,7 +51,7 @@ public class LoginActivity extends AppCompatActivity {
         PokEETACRestClient.post(this, "/user/login", PokEETACRestClient.getObjectAsStringEntity(user), "application/json", new TextHttpResponseHandler() {
             @Override
             public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
-                Log.e(TAG, "Error logging in from hello");
+                Log.e(TAG, "Error logging in");
                 Toast.makeText(getApplicationContext(), "Error logging in. Please try again!", Toast.LENGTH_LONG).show();
             }
 

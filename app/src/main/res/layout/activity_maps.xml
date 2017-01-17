@@ -35,7 +35,7 @@
         android:layout_marginLeft="5dp"
         android:layout_marginRight="5dp"
         android:background="@color/wallet_holo_blue_light"
-        android:hint="@string/zero_floor"
+        android:text="0 floor"
         android:padding="8dp"
         android:textColor="#ffffff" />
 
@@ -52,5 +52,14 @@
         tools:ignore="RelativeOverlap"
         android:layout_below="@+id/username"
         android:layout_marginTop="5dp" />
+
+    <Button
+        android:text="Change Floor"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:id="@+id/button2"
+        android:onClick="updateFloor" />
 
 </RelativeLayout>

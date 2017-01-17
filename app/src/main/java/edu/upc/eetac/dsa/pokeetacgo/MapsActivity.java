@@ -1,18 +1,24 @@
 package edu.upc.eetac.dsa.pokeetacgo;
 
 import android.app.PendingIntent;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
+import android.net.wifi.ScanResult;
+import android.net.wifi.WifiManager;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
+import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -38,13 +44,18 @@ import com.loopj.android.http.TextHttpResponseHandler;
 import java.lang.reflect.Type;
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import cz.msebera.android.httpclient.Header;
 import edu.upc.eetac.dsa.pokeetacgo.entity.Capturado;
 import edu.upc.eetac.dsa.pokeetacgo.entity.LocationMarker;
 import edu.upc.eetac.dsa.pokeetacgo.entity.User;
 import edu.upc.eetac.dsa.pokeetacgo.entity.serviceLibraryResults.ProfemonLocationResult;
+import edu.upc.eetac.dsa.pokeetacgo.entity.serviceLibraryResults.ScannedRouterResult;
+import edu.upc.eetac.dsa.pokeetacgo.entity.serviceLibraryResults.UserFloorResult;
 import edu.upc.eetac.dsa.pokeetacgo.entity.serviceLibraryResults.UserLevelResult;
 import edu.upc.eetac.dsa.pokeetacgo.serviceLibrary.PokEETACRestClient;
 
@@ -60,6 +71,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public static final int MY_PERMISSIONS_REQUEST_LOCATION = 99;
     TextView floor;
     TextView level;
+    Timer timer;
+    TimerTask timerTask;
+    final Handler handler = new Handler();
+    WifiManager wifi;
+    List<ScanResult> results;
+    List<ScannedRouterResult> wifis;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,7 +95,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mGeofenceList = new ArrayList<>();
         floor = (TextView) findViewById(R.id.floor);
         level = (TextView) findViewById(R.id.level);
-        setUsernameAndFloor();
+        setUsername();
+        setUserLevel();
+
+        wifi = (WifiManager) getSystemService(Context.WIFI_SERVICE);
+        if (!wifi.isWifiEnabled()) {
+            Toast.makeText(getApplicationContext(), "wifi is disabled..making it enabled", Toast.LENGTH_LONG).show();
+            wifi.setWifiEnabled(true);
+        }
     }
 
     protected void onStart() {
@@ -109,8 +133,125 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         setMyLocationEnabled();
         startLocationUpdates();
         if (pokEETACGo.profemonLocationMarkers.size() == 0) {
-            setProfemonMarkerIconsOnMap();
+            setProfemonLocationMarkers();
+//            updateFloor();
         }
+        //startTimer();
+    }
+
+    private void setProfemonLocationMarkers() {
+        PokEETACRestClient.get("/profemon/location/all", null, new TextHttpResponseHandler() {
+            @Override
+            public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
+                Log.e(TAG, "Error getting random profemon locations!");
+            }
+
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, String responseString) {
+                Log.i(TAG, "Success getting random profemon locations: " + responseString);
+                Type listType = new TypeToken<ArrayList<ProfemonLocationResult>>() {}.getType();
+                List<ProfemonLocationResult> profemons = new Gson().fromJson(responseString, listType);
+                for (ProfemonLocationResult profemonLocation : profemons) {
+                    Marker markerAdded = addMarkerOnMap(profemonLocation);
+                    pokEETACGo.profemonLocationMarkers.put(profemonLocation.locationId, new LocationMarker(profemonLocation, markerAdded));
+                }
+                updateMarkersAndGeofences(0);
+            }
+        });
+    }
+
+    //private void updateFloor() {
+        /*List<ScannedRouterResult> scannedRouters = getScannedRouters();
+        PokEETACRestClient.post(this, "/user/location/floor", PokEETACRestClient.getObjectAsStringEntity(scannedRouters), "application/json", new TextHttpResponseHandler() {
+            @Override
+            public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
+                Log.e(TAG, "Error getting the floor location of the user");
+            }
+
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, String responseString) {
+                Log.i(TAG, "Success getting the floor location of the user: " + responseString);
+                UserFloorResult userFloorResult = new Gson().fromJson(responseString, UserFloorResult.class);
+                if (userFloorResult.floor != Integer.parseInt(floor.getText().toString())) {
+                    floor.setText(userFloorResult.floor);
+                    //setProfemonMarkerIconsOnMap();
+                }
+            }
+        });*/
+    //}
+
+    private void startTimer() {
+        timer = new Timer();
+        initializeTimerTask();
+        timer.schedule(timerTask, 0, 15000);
+    }
+
+    private void initializeTimerTask() {
+        timerTask = new TimerTask() {
+            public void run() {
+                handler.post(new Runnable() {
+                    public void run() {
+                        //updateFloor();
+                    }
+                });
+            }
+        };
+    }
+
+    public void updateFloor(View view) {
+        if (floor.getText().toString().equals("0 floor")) {
+            floor.setText("1 floor");
+            hideMarkersAndRemoveGeofences();
+            updateMarkersAndGeofences(1);
+        } else {
+            floor.setText("0 floor");
+            hideMarkersAndRemoveGeofences();
+            updateMarkersAndGeofences(0);
+        }
+    }
+
+    private void hideMarkersAndRemoveGeofences() {
+        List<String> requestIdOfGeofencesToRemove = new ArrayList<>();
+
+        for(int i = 0; i < pokEETACGo.profemonLocationMarkers.size(); i++) {
+            pokEETACGo.profemonLocationMarkers.get(pokEETACGo.profemonLocationMarkers.keyAt(i)).getMarker().setVisible(false);
+            requestIdOfGeofencesToRemove.add(String.valueOf(pokEETACGo.profemonLocationMarkers.get(pokEETACGo.profemonLocationMarkers.keyAt(i)).getProfemonLocationResult().locationId));
+        }
+
+        mGeofenceList.clear();
+        try{
+            LocationServices.GeofencingApi.removeGeofences(mGoogleApiClient, requestIdOfGeofencesToRemove);
+        } catch (IllegalStateException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void updateMarkersAndGeofences(int floor) {
+        List<LocationMarker> locationMarkersOfCurrentFloor = pokEETACGoBusiness.getLocationMarkersOfCurrentFloor(floor, pokEETACGo.profemonLocationMarkers);
+        for(LocationMarker locationMarker : locationMarkersOfCurrentFloor) {
+            locationMarker.getMarker().setVisible(true);
+            addGeofenceToGeofenceList(locationMarker.getProfemonLocationResult());
+        }
+        if(!mGeofenceList.isEmpty()) {
+            addGeofences();
+        }
+    }
+
+    private List<ScannedRouterResult> getScannedRouters() {
+        wifi.startScan();
+        results = wifi.getScanResults();
+        wifis = new ArrayList<>();
+        if (results != null) {
+            for (int i = 0; i < results.size(); i++) {
+                ScannedRouterResult routerScanned = new ScannedRouterResult();
+                if (results.get(i).SSID.equals("eduroam")) {
+                    routerScanned.BSSID = results.get(i).BSSID;
+                    routerScanned.signalLevel = results.get(i).level;
+                }
+                wifis.add(routerScanned);
+            }
+        }
+        return wifis;
     }
 
     protected void startLocationUpdates() {
@@ -122,7 +263,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onLocationChanged(Location location) {
         LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 17f));
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 19f));
     }
 
     @Override
@@ -212,32 +353,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         return null;
     }
 
-    private void setProfemonMarkerIconsOnMap() {
-        PokEETACRestClient.get("/profemon/location/all", null, new TextHttpResponseHandler() {
-            @Override
-            public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
-                Log.e(TAG, "Error getting random profemon locations!");
-            }
-
-            @Override
-            public void onSuccess(int statusCode, Header[] headers, String responseString) {
-                Log.i(TAG, "Success getting random profemon locations: " + responseString);
-                Type listType = new TypeToken<ArrayList<ProfemonLocationResult>>() {
-                }.getType();
-                List<ProfemonLocationResult> profemons = new Gson().fromJson(responseString, listType);
-                for (ProfemonLocationResult profemonLocation : profemons) {
-                    Marker markerAdded = addMarkerOnMap(profemonLocation);
-                    addGeofenceToGeofenceList(profemonLocation);
-                    pokEETACGo.profemonLocationMarkers.put(profemonLocation.locationId, new LocationMarker(profemonLocation, markerAdded));
-                }
-                addGeofences();
-            }
-        });
-    }
-
     private Marker addMarkerOnMap(ProfemonLocationResult profemonLocation) {
         LatLng markerLatLng = new LatLng(profemonLocation.latitude, profemonLocation.longitude);
         return mMap.addMarker(new MarkerOptions()
+                .visible(false)
                 .position(markerLatLng)
                 .title(profemonLocation.name)
                 .icon(BitmapDescriptorFactory.fromBitmap(pokEETACGoBusiness.getProfemonIcon(profemonLocation.name))));
@@ -285,7 +404,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         return mGeofencePendingIntent;
     }
 
-    private void setUsernameAndFloor() {
+    private void setUsername() {
         final TextView username = (TextView) findViewById(R.id.username);
 
         PokEETACRestClient.get("/user/" + pokEETACGo.getCurrentUserId(), null, new TextHttpResponseHandler() {
@@ -299,7 +418,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 Log.i(TAG, "Success getting user from API: " + responseString);
                 User user = new Gson().fromJson(responseString, User.class);
                 username.setText(user.getUsername());
-                setUserLevel();
             }
         });
     }
@@ -336,7 +454,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             Log.i(TAG, "Geofence and Marker of location " + requestIdOfGeofenceTriggered + " deleted");
         }
 
-        if(capturadoIsSuccessful) {
+        if (capturadoIsSuccessful) {
             setUserLevel();
         }
     }

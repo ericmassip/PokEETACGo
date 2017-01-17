@@ -3,7 +3,14 @@ package edu.upc.eetac.dsa.pokeetacgo;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.util.SparseArray;
 import android.widget.EditText;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import edu.upc.eetac.dsa.pokeetacgo.entity.LocationMarker;
+import edu.upc.eetac.dsa.pokeetacgo.entity.serviceLibraryResults.ProfemonLocationResult;
 
 /**
  * Created by ericmassip on 24/12/16.
@@ -35,5 +42,17 @@ public class PokEETACGoBusiness {
 
     public boolean isEmpty(EditText editText) {
         return editText.getText().toString().isEmpty();
+    }
+
+    public List<LocationMarker> getLocationMarkersOfCurrentFloor(int floor, SparseArray<LocationMarker> profemonLocationMarkers) {
+        List<LocationMarker> profemonLocationMarkersOfCurrentFloor = new ArrayList<>();
+        for(int i = 0; i < profemonLocationMarkers.size(); i++) {
+            LocationMarker locationMarker = profemonLocationMarkers.get(profemonLocationMarkers.keyAt(i));
+            ProfemonLocationResult profemonLocationResult = locationMarker.getProfemonLocationResult();
+            if(profemonLocationResult.floor == floor) {
+                profemonLocationMarkersOfCurrentFloor.add(locationMarker);
+            }
+        }
+        return profemonLocationMarkersOfCurrentFloor;
     }
 }
