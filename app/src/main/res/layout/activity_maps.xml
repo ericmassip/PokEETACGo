@@ -35,7 +35,7 @@
         android:layout_marginLeft="5dp"
         android:layout_marginRight="5dp"
         android:background="@color/wallet_holo_blue_light"
-        android:text="0 floor"
+        android:text="Floor 0"
         android:padding="8dp"
         android:textColor="#ffffff" />
 

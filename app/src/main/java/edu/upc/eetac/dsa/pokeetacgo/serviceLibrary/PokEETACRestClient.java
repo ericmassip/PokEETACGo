@@ -20,7 +20,7 @@ import cz.msebera.android.httpclient.entity.StringEntity;
 
 public class PokEETACRestClient {
     private static final String TAG="PokEETAC";
-    private static String BASE_URL = "http://192.168.1.33:8080/pokeetac";
+    private static String BASE_URL = "http://147.83.7.207:8080/pokeetac";
 
     private static AsyncHttpClient client = new AsyncHttpClient();
 

@@ -57,6 +57,7 @@ public class GeofenceTransitionsIntentService extends IntentService implements G
     private void goToProfemonAppearedActivity(int requestIdOfGeofenceTriggered) {
         Intent profemonAppearedIntent = new Intent(this, ProfemonAppearedActivity.class);
         profemonAppearedIntent.putExtra("requestIdOfGeofenceTriggered", requestIdOfGeofenceTriggered);
+        profemonAppearedIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(profemonAppearedIntent);
     }
 

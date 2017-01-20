@@ -37,7 +37,11 @@ public class PokEETACGoBusiness {
     }
 
     public int getProfemonDrawableResourceId(String iconName) {
-        return this.context.getResources().getIdentifier(iconName.toLowerCase(), "drawable", context.getPackageName());
+        int imageResourceId = context.getResources().getIdentifier(iconName.toLowerCase(), "drawable", context.getPackageName());
+        if(imageResourceId == 0) {
+            imageResourceId = R.drawable.sorry_image_not_available;
+        }
+        return imageResourceId;
     }
 
     public boolean isEmpty(EditText editText) {

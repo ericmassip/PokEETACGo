@@ -44,7 +44,6 @@ import com.loopj.android.http.TextHttpResponseHandler;
 import java.lang.reflect.Type;
 import java.text.MessageFormat;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -74,6 +73,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     Timer timer;
     TimerTask timerTask;
     final Handler handler = new Handler();
+    private boolean profemonsAreCharged = false;
+    private int newUserFloor;
     WifiManager wifi;
     List<ScanResult> results;
     List<ScannedRouterResult> wifis;
@@ -123,8 +124,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     protected void createLocationRequest() {
         mLocationRequest = new LocationRequest();
-        mLocationRequest.setInterval(10000);
-        mLocationRequest.setFastestInterval(5000);
+        mLocationRequest.setInterval(5000);
+        mLocationRequest.setFastestInterval(2000);
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
     }
 
@@ -133,13 +134,38 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         setMyLocationEnabled();
         startLocationUpdates();
         if (pokEETACGo.profemonLocationMarkers.size() == 0) {
-            setProfemonLocationMarkers();
-//            updateFloor();
+            updateFloor();
         }
-        //startTimer();
+        startTimer();
     }
 
-    private void setProfemonLocationMarkers() {
+    private void updateFloor() {
+        List<ScannedRouterResult> scannedRouters = getScannedRouters();
+        PokEETACRestClient.post(this, "/user/location/floor", PokEETACRestClient.getObjectAsStringEntity(scannedRouters), "application/json", new TextHttpResponseHandler() {
+            @Override
+            public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
+                Log.e(TAG, "Error getting the floor location of the user");
+            }
+
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, String responseString) {
+                Log.i(TAG, "Success getting the floor location of the user: " + responseString);
+                UserFloorResult userFloorResult = new Gson().fromJson(responseString, UserFloorResult.class);
+
+                newUserFloor = userFloorResult.floor;
+                if(!profemonsAreCharged) {
+                    setProfemonLocationMarkers(newUserFloor);
+                    profemonsAreCharged = true;
+                } else if (newUserFloor != Integer.parseInt(floor.getText().toString().substring(floor.getText().length() - 1))) {
+                    hideMarkersAndRemoveGeofences();
+                    updateMarkersAndGeofences(newUserFloor);
+                }
+                floor.setText(MessageFormat.format("Floor {0}", newUserFloor));
+            }
+        });
+    }
+
+    private void setProfemonLocationMarkers(final int currentUserFloor) {
         PokEETACRestClient.get("/profemon/location/all", null, new TextHttpResponseHandler() {
             @Override
             public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
@@ -155,35 +181,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     Marker markerAdded = addMarkerOnMap(profemonLocation);
                     pokEETACGo.profemonLocationMarkers.put(profemonLocation.locationId, new LocationMarker(profemonLocation, markerAdded));
                 }
-                updateMarkersAndGeofences(0);
+                updateMarkersAndGeofences(currentUserFloor);
             }
         });
     }
 
-    //private void updateFloor() {
-        /*List<ScannedRouterResult> scannedRouters = getScannedRouters();
-        PokEETACRestClient.post(this, "/user/location/floor", PokEETACRestClient.getObjectAsStringEntity(scannedRouters), "application/json", new TextHttpResponseHandler() {
-            @Override
-            public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
-                Log.e(TAG, "Error getting the floor location of the user");
-            }
-
-            @Override
-            public void onSuccess(int statusCode, Header[] headers, String responseString) {
-                Log.i(TAG, "Success getting the floor location of the user: " + responseString);
-                UserFloorResult userFloorResult = new Gson().fromJson(responseString, UserFloorResult.class);
-                if (userFloorResult.floor != Integer.parseInt(floor.getText().toString())) {
-                    floor.setText(userFloorResult.floor);
-                    //setProfemonMarkerIconsOnMap();
-                }
-            }
-        });*/
-    //}
-
     private void startTimer() {
         timer = new Timer();
         initializeTimerTask();
-        timer.schedule(timerTask, 0, 15000);
+        timer.schedule(timerTask, 0, 10000);
     }
 
     private void initializeTimerTask() {
@@ -191,7 +197,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             public void run() {
                 handler.post(new Runnable() {
                     public void run() {
-                        //updateFloor();
+                        updateFloor();
                     }
                 });
             }
@@ -199,14 +205,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     public void updateFloor(View view) {
-        if (floor.getText().toString().equals("0 floor")) {
-            floor.setText("1 floor");
-            hideMarkersAndRemoveGeofences();
-            updateMarkersAndGeofences(1);
+        if (newUserFloor == 1) {
+            newUserFloor = 0;
         } else {
-            floor.setText("0 floor");
-            hideMarkersAndRemoveGeofences();
-            updateMarkersAndGeofences(0);
+            newUserFloor = 1;
         }
     }
 
@@ -365,7 +367,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private void addGeofenceToGeofenceList(ProfemonLocationResult profemonLocation) {
         mGeofenceList.add(new Geofence.Builder()
                 .setRequestId(String.valueOf(profemonLocation.locationId))
-                .setCircularRegion(profemonLocation.latitude, profemonLocation.longitude, 25)
+                .setCircularRegion(profemonLocation.latitude, profemonLocation.longitude, 19)
                 .setExpirationDuration(-1)
                 .setLoiteringDelay(500)
                 .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER | Geofence.GEOFENCE_TRANSITION_DWELL)

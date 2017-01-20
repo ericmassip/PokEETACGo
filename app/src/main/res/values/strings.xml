@@ -14,4 +14,5 @@
     <string name="level">Level</string>
     <string name="zero_floor">0 floor</string>
     <string name="user">User</string>
+    <string name="confirm_password">Confirm Password</string>
 </resources>

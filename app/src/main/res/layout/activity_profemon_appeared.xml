@@ -5,6 +5,7 @@
     android:id="@+id/activity_profemon_appeared"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@drawable/profemon_appeared_background"
     android:paddingBottom="@dimen/activity_vertical_margin"
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
@@ -16,15 +17,24 @@
         android:layout_height="350dp"
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
-        android:id="@+id/profemonImage" />
+        android:id="@+id/profemonImage"
+        android:contentDescription="@string/title_activity_profemon_appeared"
+        android:src="@drawable/venusals"/>
 
     <Button
         android:text="@string/capture_me_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="30dp"
+        android:layout_width="220dp"
+        android:layout_height="50dp"
         android:id="@+id/captureMeButton"
-        android:layout_alignParentBottom="true"
+        android:onClick="captureMe"
+        android:layout_marginTop="27dp"
+        android:layout_below="@+id/profemonImage"
         android:layout_centerHorizontal="true"
-        android:onClick="captureMe" />
+        android:textSize="24sp"
+        android:textColor="#FFFFFF"
+        android:background="@drawable/profemon_appeared_buttonshape"
+        android:shadowColor="#A80788"
+        android:shadowDx="0"
+        android:shadowDy="0"
+        android:shadowRadius="5"/>
 </RelativeLayout>

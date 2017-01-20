@@ -72,10 +72,10 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
         Random random = new Random();
-        int speed = 50 + random.nextInt(50);
+        int speed = 20 + random.nextInt(50);
         Log.i(TAG, "speed = " + speed);
 
-        int squareSide = 10 + random.nextInt(40);
+        int squareSide = 20 + random.nextInt(40);
         Log.i(TAG, "squareSide = " + squareSide);
 
         background = new Background(BitmapFactory.decodeResource(getResources(), R.drawable.black_blackground));

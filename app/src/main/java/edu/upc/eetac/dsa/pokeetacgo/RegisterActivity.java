@@ -22,6 +22,7 @@ public class RegisterActivity extends AppCompatActivity {
     PokEETACGoBusiness pokEETACGoBusiness;
     EditText username;
     EditText password;
+    EditText confirmPassword;
     EditText email;
 
     @Override
@@ -33,6 +34,7 @@ public class RegisterActivity extends AppCompatActivity {
 
         username = (EditText) findViewById(R.id.username);
         password = (EditText) findViewById(R.id.password);
+        confirmPassword = (EditText) findViewById(R.id.confirmPassword);
         email = (EditText) findViewById(R.id.email);
     }
 
@@ -42,8 +44,10 @@ public class RegisterActivity extends AppCompatActivity {
         user.setPassword(password.getText().toString());
         user.setEmail(email.getText().toString());
 
-        if (pokEETACGoBusiness.isEmpty(username) || pokEETACGoBusiness.isEmpty(password) || pokEETACGoBusiness.isEmpty(email)) {
+        if (pokEETACGoBusiness.isEmpty(username) || pokEETACGoBusiness.isEmpty(password) || pokEETACGoBusiness.isEmpty(confirmPassword) || pokEETACGoBusiness.isEmpty(email)) {
             Toast.makeText(getApplicationContext(), "Fill in all the fields, please.", Toast.LENGTH_SHORT).show();
+        } else if (!password.getText().toString().equals(confirmPassword.getText().toString())) {
+            Toast.makeText(getApplicationContext(), "Password and confirm password must be equal.", Toast.LENGTH_SHORT).show();
         } else {
             PokEETACRestClient.post(this, "/user/register", PokEETACRestClient.getObjectAsStringEntity(user), "application/json", new TextHttpResponseHandler() {
                 @Override
